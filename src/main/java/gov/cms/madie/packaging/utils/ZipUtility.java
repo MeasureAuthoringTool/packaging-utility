@@ -33,13 +33,13 @@ public class ZipUtility {
       zos.closeEntry();
 
     } catch (IOException e) {
-      //log.error("Failure to create Zip File", e);
+      log.error("Failure to create Zip File", e);
       throw new InternalServerException(e);
     } finally {
       try {
         zos.close();
       } catch (IOException e) {
-        //log.error("Failure to create Zip File", e);
+        log.error("Failure to create Zip File", e);
         throw new InternalServerException(e);
       }
     }
