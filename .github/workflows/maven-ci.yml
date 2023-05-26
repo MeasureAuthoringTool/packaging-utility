@@ -34,9 +34,15 @@ jobs:
         run: echo ::set-output name=version::$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
         id: project
 
+      - name: maven-settings
+        uses: s4u/maven-settings-action@v2
+        with:
+          servers: '[{"id": "github", "username": "madieUser", "password": "${GITHUB_TOKEN_REF}"}]'
+          githubServer: false
+          
       # publish snapshot iff the project version in pom.xml contains '-SNAPSHOT'
       - name: Publish SNAPSHOT version to GitHub Packages
         if: contains(steps.project.outputs.version, '-SNAPSHOT')
         run: mvn -B --no-transfer-progress deploy -DskipTests
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN_REF: ${{ secrets.GH_PAT_FOR_ACTIONS_TOKEN }}
