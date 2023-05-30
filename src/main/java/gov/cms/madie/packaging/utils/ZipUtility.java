@@ -12,17 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ZipUtility {
-	private final ByteArrayOutputStream baos ;
-	private final ZipOutputStream zos ; 
 	
-	public ZipUtility(ByteArrayOutputStream baos, ZipOutputStream zos) {
-		this.baos = baos ; 
-		this.zos = zos ; 
-	}
-
-	
-  public byte[] zipEntries(Map<String, byte[]> entries) {    
-
+  
+  public byte[] zipEntries(Map<String, byte[]> entries, ByteArrayOutputStream baos) {    
+	  
+	ZipOutputStream zos = makeZos(baos);
     try {
       for (Entry<String, byte[]> reporte : entries.entrySet()) {
         ZipEntry entry = new ZipEntry(reporte.getKey());
@@ -45,4 +39,7 @@ public class ZipUtility {
     }
     return baos.toByteArray();
   }
+  protected ZipOutputStream makeZos(ByteArrayOutputStream baos) {
+	  return new ZipOutputStream(baos) ;
+  } 
 }

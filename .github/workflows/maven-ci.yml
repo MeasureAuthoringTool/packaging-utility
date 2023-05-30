@@ -12,8 +12,17 @@ jobs:
         with:
           java-version: '17'
           distribution: 'adopt'
+
+      - name: maven-settings
+        uses: s4u/maven-settings-action@v2
+        with:
+          servers: '[{"id": "github", "username": "madieUser", "password": "${GITHUB_TOKEN_REF}"}]'
+          githubServer: false
+
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots verify
+        env:
+          GITHUB_TOKEN_REF: ${{ secrets.GH_PAT_FOR_ACTIONS_TOKEN }}
 
   publish-snapshot:
     needs: build
@@ -38,5 +47,3 @@ jobs:
       - name: Publish SNAPSHOT version to GitHub Packages
         if: contains(steps.project.outputs.version, '-SNAPSHOT')
         run: mvn -B --no-transfer-progress deploy -DskipTests
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
