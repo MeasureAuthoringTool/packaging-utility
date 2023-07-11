@@ -32,31 +32,29 @@ public class PackagingUtilityImpl implements PackagingUtility {
   private static final String TEXT_CQL = "text/cql";
   private static final String CQL_DIRECTORY = "cql/";
   private static final String RESOURCES_DIRECTORY = "resources/";
+
   @Override
   public byte[] getZipBundle(Object o, String exportFileName) throws InternalServerException {
-	  if (o instanceof Export) {
-		  Export export = (Export)o;
-		  String measureBundle = export.getMeasureBundleJson();
-	    IParser jsonParser = context.newJsonParser();
+    if (o instanceof Export) {
+      Export export = (Export) o;
+      String measureBundle = export.getMeasureBundleJson();
+      IParser jsonParser = context.newJsonParser();
 
-	    org.hl7.fhir.r4.model.Bundle bundle =
-	        (org.hl7.fhir.r4.model.Bundle) jsonParser.parseResource(measureBundle);
-	    return getZipBundle(bundle, exportFileName) ; 
-	  }
-	  else if (o instanceof Bundle) {
-		  Bundle bundle = (Bundle)o;
-		  return getZipBundle(bundle, exportFileName) ; 
-	  }
-	  else throw new InternalServerException("Calling gicore411.PackagingUtilityImpl with invalid object");
-	  
+      org.hl7.fhir.r4.model.Bundle bundle =
+          (org.hl7.fhir.r4.model.Bundle) jsonParser.parseResource(measureBundle);
+      return getZipBundle(bundle, exportFileName);
+    } else if (o instanceof Bundle) {
+      Bundle bundle = (Bundle) o;
+      return getZipBundle(bundle, exportFileName);
+    } else
+      throw new InternalServerException(
+          "Calling gicore411.PackagingUtilityImpl with invalid object");
   }
 
   private byte[] getZipBundle(Bundle bundle, String exportFileName) throws InternalServerException {
 
-    
     IParser jsonParser = context.newJsonParser();
     IParser xmlParser = context.newXmlParser();
-    
 
     if (bundle == null) {
       return null;
@@ -97,9 +95,7 @@ public class PackagingUtilityImpl implements PackagingUtility {
     for (CqlLibrary library : cqlLibraries) {
       String filePath =
           CQL_DIRECTORY + library.getCqlLibraryName() + "-" + library.getVersion() + ".cql";
-      String data = library.getCql();
-
-      entries.put(filePath, xmlBytes);
+      entries.put(filePath, library.getCql().getBytes());
     }
     // add Library Resources to Export
     List<Library> libraries = getLibraryResources(bundle);
