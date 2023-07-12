@@ -7,13 +7,11 @@
 
 
 	<groupId>gov.cms.madie.packaging</groupId>
-	<artifactId>
-		packaging-utility</artifactId>
-	<version>0.2</version>
+	<artifactId>packaging-utility</artifactId>
+	<version>0.2.1</version>
 
 	<name>packaging-utility</name>
-	<description>A
-		simple packaging-utility.</description>
+	<description>A simple packaging-utility.</description>
 	<!-- FIXME change it to the project's website -->
 	<url>http://www.example.com</url>
 	<properties>
@@ -21,15 +19,10 @@
 		<java.version>17</java.version>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
-
-		<junit-jupiter.version>5.7.2</junit-jupiter.version>
+		<junit-jupiter.version>5.9.3</junit-jupiter.version>
 		<slf4j.version>2.0.7</slf4j.version>
 		<hapi.fhir.r4.version>6.4.1</hapi.fhir.r4.version>
-
-
-		<junit-jupiter.version>5.7.2</junit-jupiter.version>
 		<slf4j.version>2.0.7</slf4j.version>
-
 	</properties>
 
 
@@ -39,7 +32,7 @@
 				<enabled>true</enabled>
 			</releases>
 			<id>github</id>
-			<name>MADiE java models</name>
+			<name>MADiE Packaging Utility</name>
 			<url>
 				https://maven.pkg.github.com/measureauthoringtool/madie-java-models</url>
 		</repository>
@@ -48,8 +41,7 @@
 		<repository>
 			<id>github</id>
 			<name>MADiE java models</name>
-			<url>
-				https://maven.pkg.github.com/measureauthoringtool/packaging-utility</url>
+			<url>https://maven.pkg.github.com/measureauthoringtool/packaging-utility</url>
 		</repository>
 	</distributionManagement>
 
@@ -68,11 +60,6 @@
 			<groupId>ca.uhn.hapi.fhir</groupId>
 			<artifactId>hapi-fhir-structures-r4</artifactId>
 			<version>${hapi.fhir.r4.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -127,12 +114,6 @@
 			<version>5.3.1</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest</artifactId>
-			<version>2.2</version>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 	<build>
 		<pluginManagement><!-- lock down plugins versions to avoid using Maven
@@ -178,6 +159,30 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>com.theoryinpractise</groupId>
+				<artifactId>googleformatter-maven-plugin</artifactId>
+				<version>1.7.3</version>
+				<executions>
+					<execution>
+						<id>reformat-sources</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>format</goal>
+						</goals>
+						<configuration>
+							<includeStale>false</includeStale>
+							<style>GOOGLE</style>
+							<filterModified>false</filterModified>
+							<skip>false</skip>
+							<fixImports>false</fixImports>
+							<maxLineLength>100</maxLineLength>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 
 	<reporting>
