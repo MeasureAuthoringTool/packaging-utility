@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import gov.cms.madie.packaging.utils.ResourceFileUtil;
 import org.apache.commons.io.FilenameUtils;
 import org.hl7.fhir.r4.model.Bundle;
 import org.junit.jupiter.api.Test;
@@ -24,7 +25,7 @@ import java.util.zip.ZipInputStream;
 
 import static org.hamcrest.CoreMatchers.is;
 
-class PackagingUtilityImplTest {
+class PackagingUtilityImplTest implements ResourceFileUtil {
 
   @Test
   void testGetZipExport() {
@@ -71,28 +72,7 @@ class PackagingUtilityImplTest {
     // Doing this in-memory to prevent writing to file system on build servers..this may need to
     // change
     // in the future if the test bundle is too large
-    Map<String, String> zipContents = new HashMap<>();
-
-    try (var zipInputStream = new ZipInputStream(new ByteArrayInputStream(widgets))) {
-      ZipEntry entry;
-      byte[] buffer = new byte[2048];
-
-      while ((entry = zipInputStream.getNextEntry()) != null) {
-        int size;
-        String filename = FilenameUtils.getName(entry.getName());
-        var byteArrayOutputStream = new ByteArrayOutputStream();
-        while ((size = zipInputStream.read(buffer)) > 0) {
-          byteArrayOutputStream.write(buffer, 0, size);
-        }
-
-        String fileContents = byteArrayOutputStream.toString();
-        byteArrayOutputStream.flush();
-        zipInputStream.closeEntry();
-        zipContents.put(filename, fileContents);
-      }
-
-      zipInputStream.closeEntry();
-    }
+    Map<String, String> zipContents = getZipContents(widgets);
 
     assertThat(zipContents.containsKey("widget.xml"), is(true));
     assertThat(
@@ -126,5 +106,44 @@ class PackagingUtilityImplTest {
             .get("TestCreateNewLibrary-1.0.000.json")
             .startsWith("{\n  \"resourceType\": \"Library\","),
         is(true));
+  }
+
+  @Test
+  void testGetZipBundleForTestCases() throws IOException {
+    PackagingUtility utility = new PackagingUtilityImpl();
+    String testCaseBundleJson = getStringFromTestResource("/testCaseBundle.json");
+    Bundle testCaseBundle =
+        FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson);
+    byte[] tc1 = utility.getZipBundle(testCaseBundle, "TC1");
+    assertNotNull(tc1);
+
+    Map<String, String> zipContents = getZipContents(tc1);
+    assertThat(zipContents.size(), is(1));
+    assertThat(zipContents.containsKey("TC1.json"), is(true));
+  }
+
+  private Map<String, String> getZipContents(byte[] inputBytes) throws IOException {
+    Map<String, String> zipContents = new HashMap<>();
+    try (var zipInputStream = new ZipInputStream(new ByteArrayInputStream(inputBytes))) {
+      ZipEntry entry;
+      byte[] buffer = new byte[2048];
+
+      while ((entry = zipInputStream.getNextEntry()) != null) {
+        int size;
+        String filename = FilenameUtils.getName(entry.getName());
+        var byteArrayOutputStream = new ByteArrayOutputStream();
+        while ((size = zipInputStream.read(buffer)) > 0) {
+          byteArrayOutputStream.write(buffer, 0, size);
+        }
+
+        String fileContents = byteArrayOutputStream.toString();
+        byteArrayOutputStream.flush();
+        zipInputStream.closeEntry();
+        zipContents.put(filename, fileContents);
+      }
+
+      zipInputStream.closeEntry();
+    }
+    return zipContents;
   }
 }

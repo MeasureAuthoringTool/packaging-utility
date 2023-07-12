@@ -59,18 +59,31 @@ public class PackagingUtilityImpl implements PackagingUtility {
     if (bundle == null) {
       return null;
     }
-    org.hl7.fhir.r4.model.DomainResource measure =
-        (org.hl7.fhir.r4.model.DomainResource) ResourceUtils.getResource(bundle, "Measure");
-    if (measure == null) {
-      throw new InternalServerException("Measure is Null");
+    if (ResourceUtils.isMeasureBundle(bundle)) {
+      org.hl7.fhir.r4.model.DomainResource measure =
+          (org.hl7.fhir.r4.model.DomainResource) ResourceUtils.getResource(bundle, "Measure");
+      String humanReadable = measure.getText().getDivAsString();
+
+      String template = ResourceUtils.getData("/templates/HumanReadable.liquid");
+      String humanReadableWithCSS =
+          template.replace("human_readable_content_holder", humanReadable);
+
+      return zipEntries(exportFileName, jsonParser, xmlParser, bundle, humanReadableWithCSS);
+    } else if (ResourceUtils.isPatientBundle(bundle)) {
+      return zipEntries(exportFileName, jsonParser, bundle);
+    } else {
+      throw new InternalServerException("Unable to find Measure or Patient Bundle");
     }
-    String humanReadable = measure.getText().getDivAsString();
+  }
 
-    String template = ResourceUtils.getData("/templates/HumanReadable.liquid");
-    String humanReadableWithCSS = template.replace("human_readable_content_holder", humanReadable);
+  private byte[] zipEntries(String exportFileName, IParser jsonParser, Bundle bundle) {
+    Map<String, byte[]> entries = new HashMap<>();
 
-    byte[] result = zipEntries(exportFileName, jsonParser, xmlParser, bundle, humanReadableWithCSS);
-    return result;
+    byte[] jsonBytes = jsonParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes();
+    entries.put(exportFileName + ".json", jsonBytes);
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    return new ZipUtility().zipEntries(entries, baos);
   }
 
   private byte[] zipEntries(
