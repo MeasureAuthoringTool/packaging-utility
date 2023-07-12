@@ -7,9 +7,8 @@
 
 
 	<groupId>gov.cms.madie.packaging</groupId>
-	<artifactId>
-		packaging-utility</artifactId>
-	<version>0.2</version>
+	<artifactId>packaging-utility</artifactId>
+	<version>0.2.1-SNAPSHOT</version>
 
 	<name>packaging-utility</name>
 	<description>A
@@ -21,13 +20,9 @@
 		<java.version>17</java.version>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
-
-		<junit-jupiter.version>5.7.2</junit-jupiter.version>
+		<junit-jupiter.version>5.9.3</junit-jupiter.version>
 		<slf4j.version>2.0.7</slf4j.version>
 		<hapi.fhir.r4.version>6.4.1</hapi.fhir.r4.version>
-
-
-		<junit-jupiter.version>5.7.2</junit-jupiter.version>
 		<slf4j.version>2.0.7</slf4j.version>
 
 	</properties>
@@ -68,11 +63,6 @@
 			<groupId>ca.uhn.hapi.fhir</groupId>
 			<artifactId>hapi-fhir-structures-r4</artifactId>
 			<version>${hapi.fhir.r4.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>3.8.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -127,12 +117,6 @@
 			<version>5.3.1</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.hamcrest</groupId>
-			<artifactId>hamcrest</artifactId>
-			<version>2.2</version>
-			<scope>test</scope>
-		</dependency>
 	</dependencies>
 	<build>
 		<pluginManagement><!-- lock down plugins versions to avoid using Maven
@@ -178,6 +162,30 @@
 				</plugin>
 			</plugins>
 		</pluginManagement>
+		<plugins>
+			<plugin>
+				<groupId>com.theoryinpractise</groupId>
+				<artifactId>googleformatter-maven-plugin</artifactId>
+				<version>1.7.3</version>
+				<executions>
+					<execution>
+						<id>reformat-sources</id>
+						<phase>process-sources</phase>
+						<goals>
+							<goal>format</goal>
+						</goals>
+						<configuration>
+							<includeStale>false</includeStale>
+							<style>GOOGLE</style>
+							<filterModified>false</filterModified>
+							<skip>false</skip>
+							<fixImports>false</fixImports>
+							<maxLineLength>100</maxLineLength>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
 	</build>
 
 	<reporting>
