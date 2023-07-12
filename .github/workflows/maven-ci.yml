@@ -47,3 +47,5 @@ jobs:
       - name: Publish SNAPSHOT version to GitHub Packages
         if: contains(steps.project.outputs.version, '-SNAPSHOT')
         run: mvn -B --no-transfer-progress deploy -DskipTests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
