@@ -8,11 +8,10 @@
 
 	<groupId>gov.cms.madie.packaging</groupId>
 	<artifactId>packaging-utility</artifactId>
-	<version>0.2.1-SNAPSHOT</version>
+	<version>0.2.1</version>
 
 	<name>packaging-utility</name>
-	<description>A
-		simple packaging-utility.</description>
+	<description>A simple packaging-utility.</description>
 	<!-- FIXME change it to the project's website -->
 	<url>http://www.example.com</url>
 	<properties>
@@ -24,7 +23,6 @@
 		<slf4j.version>2.0.7</slf4j.version>
 		<hapi.fhir.r4.version>6.4.1</hapi.fhir.r4.version>
 		<slf4j.version>2.0.7</slf4j.version>
-
 	</properties>
 
 
@@ -34,7 +32,7 @@
 				<enabled>true</enabled>
 			</releases>
 			<id>github</id>
-			<name>MADiE java models</name>
+			<name>MADiE Packaging Utility</name>
 			<url>
 				https://maven.pkg.github.com/measureauthoringtool/madie-java-models</url>
 		</repository>
@@ -43,8 +41,7 @@
 		<repository>
 			<id>github</id>
 			<name>MADiE java models</name>
-			<url>
-				https://maven.pkg.github.com/measureauthoringtool/packaging-utility</url>
+			<url>https://maven.pkg.github.com/measureauthoringtool/packaging-utility</url>
 		</repository>
 	</distributionManagement>
 
