@@ -72,7 +72,7 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
     // Doing this in-memory to prevent writing to file system on build servers..this may need to
     // change
     // in the future if the test bundle is too large
-    Map<String, String> zipContents = getFileContents(widgets);
+    Map<String, String> zipContents = getZipContents(widgets);
 
     assertThat(zipContents.containsKey("widget.xml"), is(true));
     assertThat(
@@ -117,12 +117,12 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
     byte[] tc1 = utility.getZipBundle(testCaseBundle, "TC1");
     assertNotNull(tc1);
 
-    Map<String, String> zipContents = getFileContents(tc1);
+    Map<String, String> zipContents = getZipContents(tc1);
     assertThat(zipContents.size(), is(1));
     assertThat(zipContents.containsKey("TC1.json"), is(true));
   }
 
-  private Map<String, String> getFileContents(byte[] inputBytes) throws IOException {
+  private Map<String, String> getZipContents(byte[] inputBytes) throws IOException {
     Map<String, String> zipContents = new HashMap<>();
     try (var zipInputStream = new ZipInputStream(new ByteArrayInputStream(inputBytes))) {
       ZipEntry entry;
