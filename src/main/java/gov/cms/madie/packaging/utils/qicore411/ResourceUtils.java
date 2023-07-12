@@ -41,4 +41,26 @@ public class ResourceUtils {
             .findFirst();
     return measureEntry.map(Bundle.BundleEntryComponent::getResource).orElse(null);
   }
+
+  public static boolean isMeasureBundle(Bundle bundleResource) {
+    if (bundleResource == null) {
+      return false;
+    }
+    return bundleResource.getEntry().stream()
+        .anyMatch(
+            entry ->
+                StringUtils.equalsIgnoreCase(
+                    "Measure", entry.getResource().getResourceType().toString()));
+  }
+
+  public static boolean isPatientBundle(Bundle bundleResource) {
+    if (bundleResource == null) {
+      return false;
+    }
+    return bundleResource.getEntry().stream()
+        .anyMatch(
+            entry ->
+                StringUtils.equalsIgnoreCase(
+                    "Patient", entry.getResource().getResourceType().toString()));
+  }
 }
