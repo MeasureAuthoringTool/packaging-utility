@@ -146,4 +146,25 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
     }
     return zipContents;
   }
+
+  @Test
+  void testGetZipBundleForMultipleTestCases() throws IOException {
+    PackagingUtility utility = new PackagingUtilityImpl();
+    String testCaseBundleJson1 = getStringFromTestResource("/testCaseBundle.json");
+    String testCaseBundleJson2 = getStringFromTestResource("/testCaseBundle.json");
+    Bundle testCaseBundle1 =
+            FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson1);
+    Bundle testCaseBundle2 =
+            FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson2);
+    Map<String, Bundle> multiTestCases = new HashMap<>();
+    multiTestCases.put("TC1", testCaseBundle1);
+    multiTestCases.put("TC2", testCaseBundle2);
+    byte[] tc1 = utility.getZipBundle(multiTestCases, null);
+    assertNotNull(tc1);
+
+    Map<String, String> zipContents = getZipContents(tc1);
+    assertThat(zipContents.size(), is(2));
+    assertThat(zipContents.containsKey("TC1.json"), is(true));
+    assertThat(zipContents.containsKey("TC2.json"), is(true));
+  }
 }
