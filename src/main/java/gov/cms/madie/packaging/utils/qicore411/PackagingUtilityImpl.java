@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Attachment;
@@ -46,6 +47,9 @@ public class PackagingUtilityImpl implements PackagingUtility {
     } else if (o instanceof Bundle) {
       Bundle bundle = (Bundle) o;
       return getZipBundle(bundle, exportFileName);
+    } else if (o instanceof Map) {
+      Map map = (Map) o;
+      return getTestCaseZipBundle(map);
     } else
       throw new InternalServerException(
           "Calling gicore411.PackagingUtilityImpl with invalid object");
@@ -74,6 +78,30 @@ public class PackagingUtilityImpl implements PackagingUtility {
     } else {
       throw new InternalServerException("Unable to find Measure or Patient Bundle");
     }
+  }
+
+  private byte[] getTestCaseZipBundle(Map<String, Bundle> exportBundles)
+      throws InternalServerException {
+
+    IParser jsonParser = context.newJsonParser();
+
+    if (exportBundles.isEmpty()) {
+      return null;
+    }
+
+    Map<String, byte[]> entries =
+        exportBundles.entrySet().stream()
+            .collect(
+                Collectors.toMap(
+                    entry -> entry.getKey() + ".json",
+                    entry ->
+                        jsonParser
+                            .setPrettyPrint(true)
+                            .encodeResourceToString(entry.getValue())
+                            .getBytes()));
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    return new ZipUtility().zipEntries(entries, baos);
   }
 
   private byte[] zipEntries(String exportFileName, IParser jsonParser, Bundle bundle) {
