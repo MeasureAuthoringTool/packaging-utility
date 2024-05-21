@@ -153,9 +153,9 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
     String testCaseBundleJson1 = getStringFromTestResource("/testCaseBundle.json");
     String testCaseBundleJson2 = getStringFromTestResource("/testCaseBundle.json");
     Bundle testCaseBundle1 =
-            FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson1);
+        FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson1);
     Bundle testCaseBundle2 =
-            FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson2);
+        FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson2);
     Map<String, Bundle> multiTestCases = new HashMap<>();
     multiTestCases.put("TC1", testCaseBundle1);
     multiTestCases.put("TC2", testCaseBundle2);
