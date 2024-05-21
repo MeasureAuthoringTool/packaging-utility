@@ -6,9 +6,6 @@ import java.lang.reflect.InvocationTargetException;
 
 import org.junit.jupiter.api.Test;
 
-import gov.cms.madie.packaging.utils.PackagingUtility;
-import gov.cms.madie.packaging.utils.PackagingUtilityFactory;
-
 class ResourceUtilityFactoryTest {
 
   @Test
