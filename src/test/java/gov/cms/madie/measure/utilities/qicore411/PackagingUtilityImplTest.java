@@ -79,10 +79,10 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
         zipContents.get("widget.xml").startsWith("<Bundle xmlns=\"http://hl7.org/fhir\">"),
         is(true));
 
-    assertThat(zipContents.containsKey("TestCreateNewLibrary-1.0.000.xml"), is(true));
+    assertThat(zipContents.containsKey("library-TestCreateNewLibrary-1.0.000.xml"), is(true));
     assertThat(
         zipContents
-            .get("TestCreateNewLibrary-1.0.000.xml")
+            .get("library-TestCreateNewLibrary-1.0.000.xml")
             .startsWith("<Library xmlns=\"http://hl7.org/fhir\">"),
         is(true));
 
@@ -100,11 +100,25 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
             .startsWith("library TestCreateNewLibrary version '1.0.000'"),
         is(true));
 
-    assertThat(zipContents.containsKey("TestCreateNewLibrary-1.0.000.json"), is(true));
+    assertThat(zipContents.containsKey("library-TestCreateNewLibrary-1.0.000.json"), is(true));
     assertThat(
         zipContents
-            .get("TestCreateNewLibrary-1.0.000.json")
+            .get("library-TestCreateNewLibrary-1.0.000.json")
             .startsWith("{\n  \"resourceType\": \"Library\","),
+        is(true));
+
+    assertThat(zipContents.containsKey("measure-TestCreateNewLibrary-1.0.000.json"), is(true));
+    assertThat(
+        zipContents
+            .get("measure-TestCreateNewLibrary-1.0.000.json")
+            .startsWith("{\n  \"resourceType\": \"Measure\","),
+        is(true));
+
+    assertThat(zipContents.containsKey("measure-TestCreateNewLibrary-1.0.000.xml"), is(true));
+    assertThat(
+        zipContents
+            .get("measure-TestCreateNewLibrary-1.0.000.xml")
+            .startsWith("<Measure xmlns=\"http://hl7.org/fhir\">"),
         is(true));
   }
 
@@ -153,9 +167,9 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
     String testCaseBundleJson1 = getStringFromTestResource("/testCaseBundle.json");
     String testCaseBundleJson2 = getStringFromTestResource("/testCaseBundle.json");
     Bundle testCaseBundle1 =
-            FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson1);
+        FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson1);
     Bundle testCaseBundle2 =
-            FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson2);
+        FhirContext.forR4().newJsonParser().parseResource(Bundle.class, testCaseBundleJson2);
     Map<String, Bundle> multiTestCases = new HashMap<>();
     multiTestCases.put("TC1", testCaseBundle1);
     multiTestCases.put("TC2", testCaseBundle2);
