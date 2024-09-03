@@ -21,6 +21,7 @@ import gov.cms.madie.packaging.exceptions.InternalServerException;
 import gov.cms.madie.packaging.utils.PackagingUtility;
 import gov.cms.madie.packaging.utils.ZipUtility;
 import lombok.extern.slf4j.Slf4j;
+import org.hl7.fhir.r4.model.Measure;
 
 @Slf4j
 public class PackagingUtilityImpl implements PackagingUtility {
@@ -138,12 +139,25 @@ public class PackagingUtilityImpl implements PackagingUtility {
           CQL_DIRECTORY + library.getCqlLibraryName() + "-" + library.getVersion() + ".cql";
       entries.put(filePath, library.getCql().getBytes());
     }
+
+    // add Measure Resource to Export
+    List<Measure> measure = getMeasureResource(bundle);
+    for (Measure measure1 : measure) {
+      String json = jsonParser.setPrettyPrint(true).encodeResourceToString(measure1);
+      String xml = xmlParser.setPrettyPrint(true).encodeResourceToString(measure1);
+      String fileName =
+          RESOURCES_DIRECTORY + "measure-" + measure1.getName() + "-" + measure1.getVersion();
+      entries.put(fileName + ".json", json.getBytes());
+      entries.put(fileName + ".xml", xml.getBytes());
+    }
+
     // add Library Resources to Export
     List<Library> libraries = getLibraryResources(bundle);
     for (Library library1 : libraries) {
       String json = jsonParser.setPrettyPrint(true).encodeResourceToString(library1);
       String xml = xmlParser.setPrettyPrint(true).encodeResourceToString(library1);
-      String fileName = RESOURCES_DIRECTORY + library1.getName() + "-" + library1.getVersion();
+      String fileName =
+          RESOURCES_DIRECTORY + "library-" + library1.getName() + "-" + library1.getVersion();
       entries.put(fileName + ".json", json.getBytes());
       entries.put(fileName + ".xml", xml.getBytes());
     }
@@ -183,6 +197,14 @@ public class PackagingUtilityImpl implements PackagingUtility {
         .filter(
             entry -> StringUtils.equals("Library", entry.getResource().getResourceType().name()))
         .map(entry -> (Library) entry.getResource())
+        .toList();
+  }
+
+  private List<Measure> getMeasureResource(Bundle measureBundle) {
+    return measureBundle.getEntry().stream()
+        .filter(
+            entry -> StringUtils.equals("Measure", entry.getResource().getResourceType().name()))
+        .map(entry -> (Measure) entry.getResource())
         .toList();
   }
 }
