@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gov.cms.madie.packaging</groupId>
 	<artifactId>packaging-utility</artifactId>
-	<version>0.2.3</version>
+	<version>0.2.4</version>
 
 	<name>packaging-utility</name>
 	<description>A simple packaging-utility.</description>
