@@ -7,12 +7,8 @@ import java.util.HashMap;
 public class PackagingUtilityFactory {
 
   public static PackagingUtility getInstance(String model)
-      throws InstantiationException,
-          IllegalAccessException,
-          IllegalArgumentException,
-          InvocationTargetException,
-          NoSuchMethodException,
-          SecurityException,
+      throws InstantiationException, IllegalAccessException, IllegalArgumentException,
+          InvocationTargetException, NoSuchMethodException, SecurityException,
           ClassNotFoundException {
     Map<String, String> modelMap =
         new HashMap<>() {
