@@ -20,6 +20,7 @@ import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.packaging.exceptions.InternalServerException;
 import gov.cms.madie.packaging.utils.PackagingUtility;
 import gov.cms.madie.packaging.utils.ZipUtility;
+import gov.cms.madie.packaging.utils.qicore.ResourceUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.hl7.fhir.r4.model.Measure;
 

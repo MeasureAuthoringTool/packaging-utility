@@ -12,7 +12,7 @@ class ResourceUtilityFactoryTest {
   void testGetInstance_fails() {
     try {
       PackagingUtility utility = PackagingUtilityFactory.getInstance("QI-Core");
-      fail("Should not be set " + utility.toString());
+      fail("Should not be set " + utility);
 
     } catch (InstantiationException
         | IllegalAccessException
@@ -26,9 +26,26 @@ class ResourceUtilityFactoryTest {
   }
 
   @Test
-  void testGetInstance() {
+  void testGetQiCore411Instance() {
     try {
       PackagingUtility utility = PackagingUtilityFactory.getInstance("QI-Core v4.1.1");
+      assertNotNull(utility);
+
+    } catch (InstantiationException
+        | IllegalAccessException
+        | IllegalArgumentException
+        | InvocationTargetException
+        | NoSuchMethodException
+        | SecurityException
+        | ClassNotFoundException e) {
+      fail(e);
+    }
+  }
+
+  @Test
+  void testGetQiCore6Instance() {
+    try {
+      PackagingUtility utility = PackagingUtilityFactory.getInstance("QI-Core v6.0.0");
       assertNotNull(utility);
 
     } catch (InstantiationException
