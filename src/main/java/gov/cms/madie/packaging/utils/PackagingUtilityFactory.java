@@ -18,6 +18,7 @@ public class PackagingUtilityFactory {
         new HashMap<>() {
           {
             put("QI-Core v4.1.1", "qicore411");
+            put("QI-Core v6.0.0", "qicore6");
           }
         };
 
