@@ -1,4 +1,4 @@
-package gov.cms.madie.packaging.utils.qicore411;
+package gov.cms.madie.packaging.utils.qicore;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hl7.fhir.r4.model.Bundle;
