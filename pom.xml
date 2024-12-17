@@ -17,8 +17,8 @@
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
 		<junit-jupiter.version>5.9.3</junit-jupiter.version>
-		<slf4j.version>2.0.7</slf4j.version>
-		<hapi.fhir.r4.version>6.6.1</hapi.fhir.r4.version>
+		<slf4j.version>2.0.12</slf4j.version>
+		<hapi.fhir.r4.version>7.6.0</hapi.fhir.r4.version>
 		<slf4j.version>2.0.7</slf4j.version>
 	</properties>
 
@@ -33,6 +33,11 @@
 			<url>
 				https://maven.pkg.github.com/measureauthoringtool/madie-java-models</url>
 		</repository>
+		<repository>
+			<id>maven_central</id>
+			<name>Maven Central</name>
+			<url>https://repo.maven.apache.org/maven2/</url>
+		</repository>
 	</repositories>
 	<distributionManagement>
 		<repository>
@@ -46,7 +51,7 @@
 		<dependency>
 			<groupId>gov.cms.madie</groupId>
 			<artifactId>madie-java-models</artifactId>
-			<version>0.5.1</version>
+			<version>0.6.72-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -58,10 +63,22 @@
 			<artifactId>hapi-fhir-structures-r4</artifactId>
 			<version>${hapi.fhir.r4.version}</version>
 		</dependency>
+		<!-- In-memory caching - required in HAPI FHIR v7.4.3+ -->
+		<dependency>
+			<groupId>ca.uhn.hapi.fhir</groupId>
+			<artifactId>hapi-fhir-caching-caffeine</artifactId>
+			<version>${hapi.fhir.r4.version}</version>
+		</dependency>
+		<!-- Needed to fix class not found errors when using v2.15.4 - required in HAPI FHIR v7.4.3+ -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.17.2</version>
+		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.22</version>
+			<version>1.18.34</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
@@ -72,7 +89,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jul-to-slf4j</artifactId>
-			<version>2.0.7</version>
+			<version>2.0.13</version>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
@@ -96,19 +113,19 @@
 		<dependency>
 			<groupId>org.hamcrest</groupId>
 			<artifactId>hamcrest</artifactId>
-			<version>2.2</version>
+			<version>3.0-rc1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
-			<version>5.3.1</version>
+			<version>5.11.0</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-junit-jupiter</artifactId>
-			<version>5.3.1</version>
+			<version>5.12.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
