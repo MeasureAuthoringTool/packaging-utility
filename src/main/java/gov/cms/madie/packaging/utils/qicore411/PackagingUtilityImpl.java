@@ -8,9 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.Attachment;
-import org.hl7.fhir.r4.model.Bundle;
-import org.hl7.fhir.r4.model.Library;
+import org.hl7.fhir.r4.model.*;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
@@ -22,7 +20,6 @@ import gov.cms.madie.packaging.utils.PackagingUtility;
 import gov.cms.madie.packaging.utils.ZipUtility;
 import gov.cms.madie.packaging.utils.qicore.ResourceUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.hl7.fhir.r4.model.Measure;
 
 @Slf4j
 public class PackagingUtilityImpl implements PackagingUtility {
@@ -68,11 +65,7 @@ public class PackagingUtilityImpl implements PackagingUtility {
     if (ResourceUtils.isMeasureBundle(bundle)) {
       org.hl7.fhir.r4.model.DomainResource measure =
           (org.hl7.fhir.r4.model.DomainResource) ResourceUtils.getResource(bundle, "Measure");
-      String humanReadable = measure.getText().getDivAsString();
-
-      String template = ResourceUtils.getData("/templates/HumanReadable.liquid");
-      String humanReadableWithCSS =
-          template.replace("human_readable_content_holder", humanReadable);
+      String humanReadableWithCSS = getHumanReadableWithCSS(measure);
 
       return zipEntries(exportFileName, jsonParser, xmlParser, bundle, humanReadableWithCSS);
     } else if (ResourceUtils.isPatientBundle(bundle)) {
@@ -80,6 +73,44 @@ public class PackagingUtilityImpl implements PackagingUtility {
     } else {
       throw new InternalServerException("Unable to find Measure or Patient Bundle");
     }
+  }
+
+  /**
+   * Retrieve the Measure's Narrative text (aka the Human Readable) from the provided Bundle and
+   * wrap with CSS.
+   *
+   * @param measureBundleJson String of the Measure Bundle JSON with a Measure entry containing one
+   *     Narrative.
+   * @return String representation of the Human Readable with CSS.
+   */
+  public String getHumanReadableWithCSS(String measureBundleJson) {
+    IParser jsonParser = context.newJsonParser();
+    Bundle bundle = (Bundle) jsonParser.parseResource(measureBundleJson);
+    return getHumanReadableWithCSS(bundle);
+  }
+
+  /**
+   * Retrieve the Measure's Narrative text (aka the Human Readable) from the provided Bundle and
+   * wrap with CSS.
+   *
+   * @param measureBundle Measure Bundle with a Measure entry containing one Narrative.
+   * @return String representation of the Human Readable with CSS.
+   */
+  public String getHumanReadableWithCSS(Bundle measureBundle) {
+    if (measureBundle == null) {
+      return null;
+    }
+    if (ResourceUtils.isMeasureBundle(measureBundle)) {
+      DomainResource measure = (DomainResource) ResourceUtils.getResource(measureBundle, "Measure");
+      return getHumanReadableWithCSS(measure);
+    }
+    throw new InternalServerException("Unable to parse Measure Bundle");
+  }
+
+  private String getHumanReadableWithCSS(DomainResource measure) {
+    String humanReadableNarrative = measure.getText().getDivAsString();
+    String template = ResourceUtils.getData("/templates/HumanReadable.liquid");
+    return template.replace("human_readable_content_holder", humanReadableNarrative);
   }
 
   private byte[] getTestCaseZipBundle(Map<String, Bundle> exportBundles)
