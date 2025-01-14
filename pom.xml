@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gov.cms.madie.packaging</groupId>
 	<artifactId>packaging-utility</artifactId>
-	<version>0.2.6</version>
+	<version>0.2.7</version>
 
 	<name>packaging-utility</name>
 	<description>A simple packaging-utility.</description>
@@ -51,7 +51,7 @@
 		<dependency>
 			<groupId>gov.cms.madie</groupId>
 			<artifactId>madie-java-models</artifactId>
-			<version>0.6.72-SNAPSHOT</version>
+			<version>0.6.74-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>

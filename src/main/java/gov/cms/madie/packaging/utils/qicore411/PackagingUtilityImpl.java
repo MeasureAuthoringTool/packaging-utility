@@ -42,10 +42,10 @@ public class PackagingUtilityImpl implements PackagingUtility {
 
       org.hl7.fhir.r4.model.Bundle bundle =
           (org.hl7.fhir.r4.model.Bundle) jsonParser.parseResource(measureBundle);
-      return getZipBundle(bundle, exportFileName);
+      return getZipBundle(bundle, exportFileName, export.getHumanReadable());
     } else if (o instanceof Bundle) {
       Bundle bundle = (Bundle) o;
-      return getZipBundle(bundle, exportFileName);
+      return getZipBundle(bundle, exportFileName, null);
     } else if (o instanceof Map) {
       Map map = (Map) o;
       return getTestCaseZipBundle(map);
@@ -54,7 +54,8 @@ public class PackagingUtilityImpl implements PackagingUtility {
           "Calling gicore411.PackagingUtilityImpl with invalid object");
   }
 
-  private byte[] getZipBundle(Bundle bundle, String exportFileName) throws InternalServerException {
+  private byte[] getZipBundle(Bundle bundle, String exportFileName, String humanReadable)
+      throws InternalServerException {
 
     IParser jsonParser = context.newJsonParser();
     IParser xmlParser = context.newXmlParser();
@@ -65,7 +66,8 @@ public class PackagingUtilityImpl implements PackagingUtility {
     if (ResourceUtils.isMeasureBundle(bundle)) {
       org.hl7.fhir.r4.model.DomainResource measure =
           (org.hl7.fhir.r4.model.DomainResource) ResourceUtils.getResource(bundle, "Measure");
-      String humanReadableWithCSS = getHumanReadableWithCSS(measure);
+      String humanReadableWithCSS =
+          humanReadable == null ? getHumanReadableWithCSS(measure) : humanReadable;
 
       return zipEntries(exportFileName, jsonParser, xmlParser, bundle, humanReadableWithCSS);
     } else if (ResourceUtils.isPatientBundle(bundle)) {
