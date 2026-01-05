@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gov.cms.madie.packaging</groupId>
 	<artifactId>packaging-utility</artifactId>
-	<version>0.2.12-SNAPSHOT</version>
+	<version>0.2.13-SNAPSHOT</version>
 
 	<name>packaging-utility</name>
 	<description>A simple packaging-utility.</description>
@@ -18,7 +18,7 @@
 		<maven.compiler.target>17</maven.compiler.target>
 		<junit-jupiter.version>5.9.3</junit-jupiter.version>
 		<slf4j.version>2.0.12</slf4j.version>
-		<hapi.fhir.r4.version>8.4.0</hapi.fhir.r4.version>
+		<hapi.fhir.r4.version>8.6.1</hapi.fhir.r4.version>
 		<slf4j.version>2.0.7</slf4j.version>
 	</properties>
 
@@ -51,7 +51,7 @@
 		<dependency>
 			<groupId>gov.cms.madie</groupId>
 			<artifactId>madie-java-models</artifactId>
-			<version>0.6.74-SNAPSHOT</version>
+			<version>0.8.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -61,12 +61,6 @@
 		<dependency>
 			<groupId>ca.uhn.hapi.fhir</groupId>
 			<artifactId>hapi-fhir-structures-r4</artifactId>
-			<version>${hapi.fhir.r4.version}</version>
-		</dependency>
-		<!-- In-memory caching - required in HAPI FHIR v7.4.3+ -->
-		<dependency>
-			<groupId>ca.uhn.hapi.fhir</groupId>
-			<artifactId>hapi-fhir-caching-caffeine</artifactId>
 			<version>${hapi.fhir.r4.version}</version>
 		</dependency>
 		<!-- Needed to fix class not found errors when using v2.15.4 - required in HAPI FHIR v7.4.3+ -->
