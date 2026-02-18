@@ -1,0 +1,15 @@
+coverage:
+  status:
+    project:
+      default:   # default is the status check's name, not default settings
+        target: 90%
+        threshold: 5%
+        base: auto
+        paths:
+          - "src"
+      patch:
+        default:
+          target: 90%
+          base: auto
+          paths:
+            - "src"
