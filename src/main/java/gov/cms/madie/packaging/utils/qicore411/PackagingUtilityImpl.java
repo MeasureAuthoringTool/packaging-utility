@@ -69,7 +69,7 @@ public class PackagingUtilityImpl implements PackagingUtility {
     if (bundle == null) {
       return null;
     }
-    return getZipBundle(bundle, exportFileName, exportFileName);
+    return getZipBundle(bundle, exportFileName, null);
   }
 
   private Bundle buildCompositeBundle(String compositeBundle, List<String> componentBundles) {
