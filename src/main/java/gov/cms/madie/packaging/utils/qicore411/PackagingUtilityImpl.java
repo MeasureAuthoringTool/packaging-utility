@@ -3,8 +3,10 @@ package gov.cms.madie.packaging.utils.qicore411;
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +22,7 @@ import gov.cms.madie.packaging.utils.PackagingUtility;
 import gov.cms.madie.packaging.utils.ZipUtility;
 import gov.cms.madie.packaging.utils.qicore.ResourceUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.CollectionUtils;
 
 @Slf4j
 public class PackagingUtilityImpl implements PackagingUtility {
@@ -52,6 +55,48 @@ public class PackagingUtilityImpl implements PackagingUtility {
     } else
       throw new InternalServerException(
           "Calling gicore411.PackagingUtilityImpl with invalid object");
+  }
+
+  @Override
+  public byte[] buildCompositeExport(
+      String compositeBundle, List<Export> componentExports, String exportFileName) {
+    Bundle bundle =
+        buildCompositeBundle(
+            compositeBundle,
+            componentExports.stream()
+                .map(Export::getMeasureBundleJson)
+                .collect(Collectors.toList()));
+    if (bundle == null) {
+      return null;
+    }
+    return getZipBundle(bundle, exportFileName, null);
+  }
+
+  private Bundle buildCompositeBundle(String compositeBundle, List<String> componentBundles) {
+    if (StringUtils.isBlank(compositeBundle)) {
+      return null;
+    }
+
+    IParser jsonParser = context.newJsonParser();
+    Bundle bundle = (Bundle) jsonParser.parseResource(compositeBundle);
+    if (CollectionUtils.isEmpty(componentBundles)) {
+      return bundle;
+    }
+    Set<String> existingNameVersions =
+        bundle.getEntry().stream()
+            .map(this::getNameVersionKey)
+            .filter(java.util.Objects::nonNull)
+            .collect(Collectors.toCollection(HashSet::new));
+    for (String componentBundle : componentBundles) {
+      Bundle component = (Bundle) jsonParser.parseResource(componentBundle);
+      for (Bundle.BundleEntryComponent entry : component.getEntry()) {
+        String key = getNameVersionKey(entry);
+        if (key == null || existingNameVersions.add(key)) {
+          bundle.addEntry(entry);
+        }
+      }
+    }
+    return bundle;
   }
 
   private byte[] getZipBundle(Bundle bundle, String exportFileName, String humanReadable)
@@ -240,5 +285,17 @@ public class PackagingUtilityImpl implements PackagingUtility {
             entry -> StringUtils.equals("Measure", entry.getResource().getResourceType().name()))
         .map(entry -> (Measure) entry.getResource())
         .toList();
+  }
+
+  private String getNameVersionKey(Bundle.BundleEntryComponent entry) {
+    if (entry.getResource() instanceof MetadataResource metadataResource) {
+      String type = metadataResource.getResourceType().name();
+      String name = metadataResource.getName();
+      String version = metadataResource.getVersion();
+      if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(version)) {
+        return type + "|" + name + "|" + version;
+      }
+    }
+    return null;
   }
 }

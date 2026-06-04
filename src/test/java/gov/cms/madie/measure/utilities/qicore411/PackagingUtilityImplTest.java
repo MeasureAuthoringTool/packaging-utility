@@ -1,9 +1,6 @@
 package gov.cms.madie.measure.utilities.qicore411;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import gov.cms.madie.packaging.utils.ResourceFileUtil;
 import org.apache.commons.io.FilenameUtils;
@@ -18,12 +15,15 @@ import gov.cms.madie.packaging.utils.PackagingUtility;
 import gov.cms.madie.packaging.utils.qicore411.PackagingUtilityImpl;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.jupiter.api.Assertions.*;
 
 class PackagingUtilityImplTest implements ResourceFileUtil {
 
@@ -180,5 +180,49 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
     assertThat(zipContents.size(), is(2));
     assertThat(zipContents.containsKey("TC1.json"), is(true));
     assertThat(zipContents.containsKey("TC2.json"), is(true));
+  }
+
+  @Test
+  void testBuildCompositeExportNullCompositeBundle() {
+    PackagingUtilityImpl utility = new PackagingUtilityImpl();
+    List<Export> componentExports = new ArrayList<>();
+    byte[] result = utility.buildCompositeExport(null, componentExports, "composite");
+    assertNull(result);
+  }
+
+  @Test
+  void testBuildCompositeExportBlankCompositeBundle() {
+    PackagingUtilityImpl utility = new PackagingUtilityImpl();
+    List<Export> componentExports = new ArrayList<>();
+    byte[] result = utility.buildCompositeExport("", componentExports, "composite");
+    assertNull(result);
+  }
+
+  @Test
+  void testBuildCompositeExportWithEmptyComponentExports() throws IOException {
+    PackagingUtilityImpl utility = new PackagingUtilityImpl();
+    List<Export> componentExports = new ArrayList<>();
+    byte[] result = utility.buildCompositeExport(JsonBits.BUNDLE, componentExports, "composite");
+    assertNotNull(result);
+
+    Map<String, String> zipContents = getZipContents(result);
+    assertThat(zipContents.containsKey("composite.json"), is(true));
+    assertThat(zipContents.containsKey("composite.xml"), is(true));
+    assertThat(zipContents.containsKey("composite.html"), is(true));
+  }
+
+  @Test
+  void testBuildCompositeExportWithComponentExports() throws IOException {
+    PackagingUtilityImpl utility = new PackagingUtilityImpl();
+    Export componentExport = new Export();
+    componentExport.setMeasureBundleJson(JsonBits.BUNDLE);
+    List<Export> componentExports = List.of(componentExport);
+
+    byte[] result = utility.buildCompositeExport(JsonBits.BUNDLE, componentExports, "composite");
+    assertNotNull(result);
+
+    Map<String, String> zipContents = getZipContents(result);
+    assertThat(zipContents.containsKey("composite.json"), is(true));
+    assertThat(zipContents.containsKey("composite.xml"), is(true));
   }
 }
