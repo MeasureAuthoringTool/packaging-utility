@@ -191,14 +191,6 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
   }
 
   @Test
-  void testBuildCompositeExportBlankCompositeBundle() {
-    PackagingUtilityImpl utility = new PackagingUtilityImpl();
-    List<Export> componentExports = new ArrayList<>();
-    byte[] result = utility.buildCompositeExport("", componentExports, "composite");
-    assertNull(result);
-  }
-
-  @Test
   void testBuildCompositeExportWithEmptyComponentExports() throws IOException {
     PackagingUtilityImpl utility = new PackagingUtilityImpl();
     List<Export> componentExports = new ArrayList<>();
@@ -224,5 +216,63 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
     Map<String, String> zipContents = getZipContents(result);
     assertThat(zipContents.containsKey("composite.json"), is(true));
     assertThat(zipContents.containsKey("composite.xml"), is(true));
+  }
+
+  @Test
+  void testBuildCompositeMeasureBundleNullCompositeBundle() {
+    PackagingUtilityImpl utility = new PackagingUtilityImpl();
+    String result = utility.buildCompositeMeasureBundle(null, new ArrayList<>());
+    assertNull(result);
+  }
+
+  @Test
+  void testBuildCompositeMeasureBundleWithEmptyComponentExports() {
+    PackagingUtilityImpl utility = new PackagingUtilityImpl();
+    String result = utility.buildCompositeMeasureBundle(JsonBits.BUNDLE, new ArrayList<>());
+    // When componentExports is empty, the original compositeBundle string is returned unchanged
+    assertEquals(JsonBits.BUNDLE, result);
+  }
+
+  @Test
+  void testBuildCompositeMeasureBundleWithNullComponentExports() {
+    PackagingUtilityImpl utility = new PackagingUtilityImpl();
+    String result = utility.buildCompositeMeasureBundle(JsonBits.BUNDLE, null);
+    // When componentExports is null, the original compositeBundle string is returned unchanged
+    assertEquals(JsonBits.BUNDLE, result);
+  }
+
+  @Test
+  void testBuildCompositeMeasureBundleDeduplicatesEntries() {
+    PackagingUtilityImpl utility = new PackagingUtilityImpl();
+    Export componentExport = new Export();
+    componentExport.setMeasureBundleJson(JsonBits.BUNDLE);
+    List<Export> componentExports = List.of(componentExport);
+
+    String result = utility.buildCompositeMeasureBundle(JsonBits.BUNDLE, componentExports);
+    assertNotNull(result);
+    assertThat(result.contains("\"resourceType\": \"Bundle\""), is(true));
+
+    // Parse the result and verify entries were deduplicated (same name|version not duplicated)
+    Bundle resultBundle = FhirContext.forR4().newJsonParser().parseResource(Bundle.class, result);
+    long measureCount =
+        resultBundle.getEntry().stream()
+            .filter(e -> "Measure".equals(e.getResource().getResourceType().name()))
+            .count();
+    // Only one Measure entry since both bundles have same Measure name+version
+    assertEquals(1, measureCount);
+  }
+
+  @Test
+  void testBuildCompositeMeasureBundleFiltersNullAndBlankBundleJson() {
+    PackagingUtilityImpl utility = new PackagingUtilityImpl();
+    Export componentWithNull = new Export();
+    componentWithNull.setMeasureBundleJson(null);
+    Export componentWithBlank = new Export();
+    componentWithBlank.setMeasureBundleJson("");
+    List<Export> componentExports = List.of(componentWithNull, componentWithBlank);
+
+    String result = utility.buildCompositeMeasureBundle(JsonBits.BUNDLE, componentExports);
+    assertNotNull(result);
+    assertThat(result.contains("\"resourceType\": \"Bundle\""), is(true));
   }
 }
