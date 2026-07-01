@@ -13,6 +13,8 @@ public interface PackagingUtility {
   byte[] buildCompositeExport(
       String compositeBundle, List<Export> componentBundles, String exportFileName);
 
+  String buildCompositeMeasureBundle(String compositeBundle, List<Export> componentExports);
+
   String getHumanReadableWithCSS(Bundle measureBundle);
 
   String getHumanReadableWithCSS(String measureBundleJson);

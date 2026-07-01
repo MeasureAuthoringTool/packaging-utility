@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -60,35 +61,63 @@ public class PackagingUtilityImpl implements PackagingUtility {
   @Override
   public byte[] buildCompositeExport(
       String compositeBundle, List<Export> componentExports, String exportFileName) {
-    Bundle bundle =
-        buildCompositeBundle(
-            compositeBundle,
-            componentExports.stream()
-                .map(Export::getMeasureBundleJson)
-                .collect(Collectors.toList()));
+    Bundle bundle = mergeComponentAndCompositeBundles(compositeBundle, componentExports);
     if (bundle == null) {
       return null;
     }
     return getZipBundle(bundle, exportFileName, null);
   }
 
-  private Bundle buildCompositeBundle(String compositeBundle, List<String> componentBundles) {
+  @Override
+  public String buildCompositeMeasureBundle(String compositeBundle, List<Export> componentExports) {
+    if (StringUtils.isBlank(compositeBundle)) {
+      return null;
+    }
+    if (CollectionUtils.isEmpty(componentExports)) {
+      return compositeBundle;
+    }
+    Bundle bundle = mergeComponentAndCompositeBundles(compositeBundle, componentExports);
+    if (bundle == null) {
+      return null;
+    }
+    return context.newJsonParser().setPrettyPrint(true).encodeResourceToString(bundle);
+  }
+
+  /**
+   * Core logic for merging composite and component bundles. Returns the merged Bundle object
+   * directly.
+   */
+  private Bundle mergeComponentAndCompositeBundles(
+      String compositeBundle, List<Export> componentExports) {
     if (StringUtils.isBlank(compositeBundle)) {
       return null;
     }
 
     IParser jsonParser = context.newJsonParser();
     Bundle bundle = (Bundle) jsonParser.parseResource(compositeBundle);
-    if (CollectionUtils.isEmpty(componentBundles)) {
+
+    if (CollectionUtils.isEmpty(componentExports)) {
       return bundle;
     }
+
+    List<String> componentBundleJsons =
+        componentExports.stream()
+            .map(Export::getMeasureBundleJson)
+            .filter(StringUtils::isNotBlank)
+            .toList();
+
+    if (componentBundleJsons.isEmpty()) {
+      return bundle;
+    }
+
     Set<String> existingNameVersions =
         bundle.getEntry().stream()
             .map(this::getNameVersionKey)
-            .filter(java.util.Objects::nonNull)
+            .filter(Objects::nonNull)
             .collect(Collectors.toCollection(HashSet::new));
-    for (String componentBundle : componentBundles) {
-      Bundle component = (Bundle) jsonParser.parseResource(componentBundle);
+
+    for (String componentBundleJson : componentBundleJsons) {
+      Bundle component = (Bundle) jsonParser.parseResource(componentBundleJson);
       for (Bundle.BundleEntryComponent entry : component.getEntry()) {
         String key = getNameVersionKey(entry);
         if (key == null || existingNameVersions.add(key)) {
