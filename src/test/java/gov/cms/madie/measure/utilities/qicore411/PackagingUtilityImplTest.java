@@ -186,7 +186,8 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
   void testBuildCompositeExportNullCompositeBundle() {
     PackagingUtilityImpl utility = new PackagingUtilityImpl();
     List<Export> componentExports = new ArrayList<>();
-    byte[] result = utility.buildCompositeExport(null, componentExports, "composite");
+
+    byte[] result = utility.buildCompositeExport(null, componentExports, null, "composite");
     assertNull(result);
   }
 
@@ -194,7 +195,8 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
   void testBuildCompositeExportWithEmptyComponentExports() throws IOException {
     PackagingUtilityImpl utility = new PackagingUtilityImpl();
     List<Export> componentExports = new ArrayList<>();
-    byte[] result = utility.buildCompositeExport(JsonBits.BUNDLE, componentExports, "composite");
+    byte[] result =
+        utility.buildCompositeExport(JsonBits.BUNDLE, componentExports, null, "composite");
     assertNotNull(result);
 
     Map<String, String> zipContents = getZipContents(result);
@@ -210,12 +212,58 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
     componentExport.setMeasureBundleJson(JsonBits.BUNDLE);
     List<Export> componentExports = List.of(componentExport);
 
-    byte[] result = utility.buildCompositeExport(JsonBits.BUNDLE, componentExports, "composite");
+    byte[] result =
+        utility.buildCompositeExport(JsonBits.BUNDLE, componentExports, null, "composite");
     assertNotNull(result);
 
     Map<String, String> zipContents = getZipContents(result);
     assertThat(zipContents.containsKey("composite.json"), is(true));
     assertThat(zipContents.containsKey("composite.xml"), is(true));
+  }
+
+  @Test
+  void testBuildCompositeExportWithComponentHumanReadables() throws IOException {
+    PackagingUtilityImpl utility = new PackagingUtilityImpl();
+    Export componentExport = new Export();
+    componentExport.setMeasureBundleJson(JsonBits.BUNDLE);
+    List<Export> componentExports = List.of(componentExport);
+
+    // Create component human readables
+    List<Export.ComponentHumanReadable> componentHumanReadables = new ArrayList<>();
+    Export.ComponentHumanReadable humanReadable1 =
+        Export.ComponentHumanReadable.builder()
+            .fileName("component1")
+            .humanReadable("<html><body>Component 1 Human Readable</body></html>")
+            .componentId("component-1")
+            .build();
+    Export.ComponentHumanReadable humanReadable2 =
+        Export.ComponentHumanReadable.builder()
+            .fileName("component2")
+            .humanReadable("<html><body>Component 2 Human Readable</body></html>")
+            .componentId("component-2")
+            .build();
+    componentHumanReadables.add(humanReadable1);
+    componentHumanReadables.add(humanReadable2);
+
+    byte[] result =
+        utility.buildCompositeExport(
+            JsonBits.BUNDLE, componentExports, componentHumanReadables, "composite");
+    assertNotNull(result);
+
+    Map<String, String> zipContents = getZipContents(result);
+    assertThat(zipContents.containsKey("composite.json"), is(true));
+    assertThat(zipContents.containsKey("composite.xml"), is(true));
+    assertThat(zipContents.containsKey("composite.html"), is(true));
+
+    // Verify component human readables are in the root of the zip
+    assertThat(zipContents.containsKey("component1.html"), is(true));
+    assertThat(
+        zipContents.get("component1.html"),
+        is("<html><body>Component 1 Human Readable</body></html>"));
+    assertThat(zipContents.containsKey("component2.html"), is(true));
+    assertThat(
+        zipContents.get("component2.html"),
+        is("<html><body>Component 2 Human Readable</body></html>"));
   }
 
   @Test

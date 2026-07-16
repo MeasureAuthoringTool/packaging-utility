@@ -1,18 +1,5 @@
 package gov.cms.madie.packaging.utils.qicore411;
 
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
-import org.hl7.fhir.r4.model.*;
-
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import gov.cms.madie.models.common.Version;
@@ -22,50 +9,63 @@ import gov.cms.madie.packaging.exceptions.InternalServerException;
 import gov.cms.madie.packaging.utils.PackagingUtility;
 import gov.cms.madie.packaging.utils.ZipUtility;
 import gov.cms.madie.packaging.utils.qicore.ResourceUtils;
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.r4.model.*;
 import org.springframework.util.CollectionUtils;
 
 @Slf4j
 public class PackagingUtilityImpl implements PackagingUtility {
-  private FhirContext context;
-
-  public PackagingUtilityImpl() {
-    context = FhirContext.forR4();
-  }
-
   private static final String TEXT_CQL = "text/cql";
   private static final String CQL_DIRECTORY = "cql/";
   private static final String RESOURCES_DIRECTORY = "resources/";
 
+  private final FhirContext context;
+
+  public PackagingUtilityImpl() {
+    this.context = FhirContext.forR4();
+  }
+
   @Override
   public byte[] getZipBundle(Object o, String exportFileName) throws InternalServerException {
-    if (o instanceof Export) {
-      Export export = (Export) o;
-      String measureBundle = export.getMeasureBundleJson();
-      IParser jsonParser = context.newJsonParser();
+    if (o instanceof Export export) {
+      Bundle bundle = parseBundle(export.getMeasureBundleJson());
+      return getZipBundle(bundle, exportFileName, export.getHumanReadable(), null);
+    }
 
-      org.hl7.fhir.r4.model.Bundle bundle =
-          (org.hl7.fhir.r4.model.Bundle) jsonParser.parseResource(measureBundle);
-      return getZipBundle(bundle, exportFileName, export.getHumanReadable());
-    } else if (o instanceof Bundle) {
-      Bundle bundle = (Bundle) o;
-      return getZipBundle(bundle, exportFileName, null);
-    } else if (o instanceof Map) {
-      Map map = (Map) o;
-      return getTestCaseZipBundle(map);
-    } else
-      throw new InternalServerException(
-          "Calling gicore411.PackagingUtilityImpl with invalid object");
+    if (o instanceof Bundle bundle) {
+      return getZipBundle(bundle, exportFileName, null, null);
+    }
+
+    if (o instanceof Map<?, ?> map) {
+      @SuppressWarnings("unchecked")
+      Map<String, Bundle> exportBundles = (Map<String, Bundle>) map;
+      return getTestCaseZipBundle(exportBundles);
+    }
+
+    throw new InternalServerException("Calling gicore411.PackagingUtilityImpl with invalid object");
   }
 
   @Override
   public byte[] buildCompositeExport(
-      String compositeBundle, List<Export> componentExports, String exportFileName) {
+      String compositeBundle,
+      List<Export> componentExports,
+      List<Export.ComponentHumanReadable> componentHumanReadables,
+      String exportFileName) {
     Bundle bundle = mergeComponentAndCompositeBundles(compositeBundle, componentExports);
     if (bundle == null) {
       return null;
     }
-    return getZipBundle(bundle, exportFileName, null);
+    return getZipBundle(bundle, exportFileName, null, componentHumanReadables);
   }
 
   @Override
@@ -76,10 +76,12 @@ public class PackagingUtilityImpl implements PackagingUtility {
     if (CollectionUtils.isEmpty(componentExports)) {
       return compositeBundle;
     }
+
     Bundle bundle = mergeComponentAndCompositeBundles(compositeBundle, componentExports);
     if (bundle == null) {
       return null;
     }
+
     return context.newJsonParser().setPrettyPrint(true).encodeResourceToString(bundle);
   }
 
@@ -93,9 +95,7 @@ public class PackagingUtilityImpl implements PackagingUtility {
       return null;
     }
 
-    IParser jsonParser = context.newJsonParser();
-    Bundle bundle = (Bundle) jsonParser.parseResource(compositeBundle);
-
+    Bundle bundle = parseBundle(compositeBundle);
     if (CollectionUtils.isEmpty(componentExports)) {
       return bundle;
     }
@@ -117,7 +117,7 @@ public class PackagingUtilityImpl implements PackagingUtility {
             .collect(Collectors.toCollection(HashSet::new));
 
     for (String componentBundleJson : componentBundleJsons) {
-      Bundle component = (Bundle) jsonParser.parseResource(componentBundleJson);
+      Bundle component = parseBundle(componentBundleJson);
       for (Bundle.BundleEntryComponent entry : component.getEntry()) {
         String key = getNameVersionKey(entry);
         if (key == null || existingNameVersions.add(key)) {
@@ -125,62 +125,62 @@ public class PackagingUtilityImpl implements PackagingUtility {
         }
       }
     }
+
     return bundle;
   }
 
-  private byte[] getZipBundle(Bundle bundle, String exportFileName, String humanReadable)
+  private Bundle parseBundle(String bundleJson) {
+    return (Bundle) context.newJsonParser().parseResource(bundleJson);
+  }
+
+  private byte[] getZipBundle(
+      Bundle bundle,
+      String exportFileName,
+      String humanReadable,
+      List<Export.ComponentHumanReadable> componentHumanReadables)
       throws InternalServerException {
-
-    IParser jsonParser = context.newJsonParser();
-    IParser xmlParser = context.newXmlParser();
-
     if (bundle == null) {
       return null;
     }
-    if (ResourceUtils.isMeasureBundle(bundle)) {
-      org.hl7.fhir.r4.model.DomainResource measure =
-          (org.hl7.fhir.r4.model.DomainResource) ResourceUtils.getResource(bundle, "Measure");
-      String humanReadableWithCSS =
-          humanReadable == null ? getHumanReadableWithCSS(measure) : humanReadable;
 
-      return zipEntries(exportFileName, jsonParser, xmlParser, bundle, humanReadableWithCSS);
-    } else if (ResourceUtils.isPatientBundle(bundle)) {
+    IParser jsonParser = context.newJsonParser();
+    if (ResourceUtils.isPatientBundle(bundle)) {
       return zipEntries(exportFileName, jsonParser, bundle);
-    } else {
+    }
+
+    if (!ResourceUtils.isMeasureBundle(bundle)) {
       throw new InternalServerException("Unable to find Measure or Patient Bundle");
     }
+
+    DomainResource measure = (DomainResource) ResourceUtils.getResource(bundle, "Measure");
+    String humanReadableWithCSS =
+        humanReadable == null ? getHumanReadableWithCSS(measure) : humanReadable;
+
+    return zipEntries(
+        exportFileName,
+        jsonParser,
+        context.newXmlParser(),
+        bundle,
+        humanReadableWithCSS,
+        componentHumanReadables);
   }
 
-  /**
-   * Retrieve the Measure's Narrative text (aka the Human Readable) from the provided Bundle and
-   * wrap with CSS.
-   *
-   * @param measureBundleJson String of the Measure Bundle JSON with a Measure entry containing one
-   *     Narrative.
-   * @return String representation of the Human Readable with CSS.
-   */
+  @Override
   public String getHumanReadableWithCSS(String measureBundleJson) {
-    IParser jsonParser = context.newJsonParser();
-    Bundle bundle = (Bundle) jsonParser.parseResource(measureBundleJson);
-    return getHumanReadableWithCSS(bundle);
+    return getHumanReadableWithCSS(parseBundle(measureBundleJson));
   }
 
-  /**
-   * Retrieve the Measure's Narrative text (aka the Human Readable) from the provided Bundle and
-   * wrap with CSS.
-   *
-   * @param measureBundle Measure Bundle with a Measure entry containing one Narrative.
-   * @return String representation of the Human Readable with CSS.
-   */
+  @Override
   public String getHumanReadableWithCSS(Bundle measureBundle) {
     if (measureBundle == null) {
       return null;
     }
-    if (ResourceUtils.isMeasureBundle(measureBundle)) {
-      DomainResource measure = (DomainResource) ResourceUtils.getResource(measureBundle, "Measure");
-      return getHumanReadableWithCSS(measure);
+    if (!ResourceUtils.isMeasureBundle(measureBundle)) {
+      throw new InternalServerException("Unable to parse Measure Bundle");
     }
-    throw new InternalServerException("Unable to parse Measure Bundle");
+
+    DomainResource measure = (DomainResource) ResourceUtils.getResource(measureBundle, "Measure");
+    return getHumanReadableWithCSS(measure);
   }
 
   private String getHumanReadableWithCSS(DomainResource measure) {
@@ -191,13 +191,11 @@ public class PackagingUtilityImpl implements PackagingUtility {
 
   private byte[] getTestCaseZipBundle(Map<String, Bundle> exportBundles)
       throws InternalServerException {
-
-    IParser jsonParser = context.newJsonParser();
-
     if (exportBundles.isEmpty()) {
       return null;
     }
 
+    IParser jsonParser = context.newJsonParser();
     Map<String, byte[]> entries =
         exportBundles.entrySet().stream()
             .collect(
@@ -209,88 +207,118 @@ public class PackagingUtilityImpl implements PackagingUtility {
                             .encodeResourceToString(entry.getValue())
                             .getBytes()));
 
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    return new ZipUtility().zipEntries(entries, baos);
+    return new ZipUtility().zipEntries(entries, new ByteArrayOutputStream());
   }
 
   private byte[] zipEntries(String exportFileName, IParser jsonParser, Bundle bundle) {
     Map<String, byte[]> entries = new HashMap<>();
-
-    byte[] jsonBytes = jsonParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes();
-    entries.put(exportFileName + ".json", jsonBytes);
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    return new ZipUtility().zipEntries(entries, baos);
+    entries.put(
+        exportFileName + ".json",
+        jsonParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes());
+    return new ZipUtility().zipEntries(entries, new ByteArrayOutputStream());
   }
 
   private byte[] zipEntries(
       String exportFileName,
       IParser jsonParser,
       IParser xmlParser,
-      org.hl7.fhir.r4.model.Bundle bundle,
-      String humanReadableWithCSS) {
+      Bundle bundle,
+      String humanReadableWithCSS,
+      List<Export.ComponentHumanReadable> componentHumanReadables) {
 
-    Map<String, byte[]> entries = new HashMap<String, byte[]>();
+    Map<String, byte[]> entries = new HashMap<>();
 
-    // Add Json
-    byte[] jsonBytes = jsonParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes();
-    entries.put(exportFileName + ".json", jsonBytes);
+    addBundleEntries(entries, exportFileName, jsonParser, xmlParser, bundle);
+    addCqlEntries(entries, bundle);
+    addMeasureEntries(entries, jsonParser, xmlParser, bundle);
+    addLibraryEntries(entries, jsonParser, xmlParser, bundle);
 
-    // Add Xml
-    byte[] xmlBytes = xmlParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes();
-    entries.put(exportFileName + ".xml", xmlBytes);
+    entries.put(exportFileName + ".html", humanReadableWithCSS.getBytes());
+    addComponentHumanReadableEntries(entries, componentHumanReadables);
 
-    // add Library Cql Files to Export
-    List<CqlLibrary> cqlLibraries = getCQLForLibraries(bundle);
-    for (CqlLibrary library : cqlLibraries) {
+    return new ZipUtility().zipEntries(entries, new ByteArrayOutputStream());
+  }
+
+  private void addBundleEntries(
+      Map<String, byte[]> entries,
+      String exportFileName,
+      IParser jsonParser,
+      IParser xmlParser,
+      Bundle bundle) {
+    entries.put(
+        exportFileName + ".json",
+        jsonParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes());
+    entries.put(
+        exportFileName + ".xml",
+        xmlParser.setPrettyPrint(true).encodeResourceToString(bundle).getBytes());
+  }
+
+  private void addCqlEntries(Map<String, byte[]> entries, Bundle bundle) {
+    for (CqlLibrary library : getCQLForLibraries(bundle)) {
       String filePath =
           CQL_DIRECTORY + library.getCqlLibraryName() + "-" + library.getVersion() + ".cql";
       entries.put(filePath, library.getCql().getBytes());
     }
+  }
 
-    // add Measure Resource to Export
-    List<Measure> measure = getMeasureResource(bundle);
-    for (Measure measure1 : measure) {
-      String json = jsonParser.setPrettyPrint(true).encodeResourceToString(measure1);
-      String xml = xmlParser.setPrettyPrint(true).encodeResourceToString(measure1);
+  private void addMeasureEntries(
+      Map<String, byte[]> entries, IParser jsonParser, IParser xmlParser, Bundle bundle) {
+    for (Measure measure : getMeasureResource(bundle)) {
       String fileName =
-          RESOURCES_DIRECTORY + "measure-" + measure1.getName() + "-" + measure1.getVersion();
-      entries.put(fileName + ".json", json.getBytes());
-      entries.put(fileName + ".xml", xml.getBytes());
+          RESOURCES_DIRECTORY + "measure-" + measure.getName() + "-" + measure.getVersion();
+      entries.put(
+          fileName + ".json",
+          jsonParser.setPrettyPrint(true).encodeResourceToString(measure).getBytes());
+      entries.put(
+          fileName + ".xml",
+          xmlParser.setPrettyPrint(true).encodeResourceToString(measure).getBytes());
+    }
+  }
+
+  private void addLibraryEntries(
+      Map<String, byte[]> entries, IParser jsonParser, IParser xmlParser, Bundle bundle) {
+    for (Library library : getLibraryResources(bundle)) {
+      String fileName =
+          RESOURCES_DIRECTORY + "library-" + library.getName() + "-" + library.getVersion();
+      entries.put(
+          fileName + ".json",
+          jsonParser.setPrettyPrint(true).encodeResourceToString(library).getBytes());
+      entries.put(
+          fileName + ".xml",
+          xmlParser.setPrettyPrint(true).encodeResourceToString(library).getBytes());
+    }
+  }
+
+  private void addComponentHumanReadableEntries(
+      Map<String, byte[]> entries, List<Export.ComponentHumanReadable> componentHumanReadables) {
+    if (CollectionUtils.isEmpty(componentHumanReadables)) {
+      return;
     }
 
-    // add Library Resources to Export
-    List<Library> libraries = getLibraryResources(bundle);
-    for (Library library1 : libraries) {
-      String json = jsonParser.setPrettyPrint(true).encodeResourceToString(library1);
-      String xml = xmlParser.setPrettyPrint(true).encodeResourceToString(library1);
-      String fileName =
-          RESOURCES_DIRECTORY + "library-" + library1.getName() + "-" + library1.getVersion();
-      entries.put(fileName + ".json", json.getBytes());
-      entries.put(fileName + ".xml", xml.getBytes());
+    for (Export.ComponentHumanReadable componentHumanReadable : componentHumanReadables) {
+      if (componentHumanReadable != null
+          && StringUtils.isNotBlank(componentHumanReadable.getFileName())
+          && StringUtils.isNotBlank(componentHumanReadable.getHumanReadable())) {
+        entries.put(
+            componentHumanReadable.getFileName() + ".html",
+            componentHumanReadable.getHumanReadable().getBytes());
+      }
     }
-
-    entries.put(exportFileName + ".html", humanReadableWithCSS.getBytes());
-
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    byte[] zipFileBytes = new ZipUtility().zipEntries(entries, baos);
-    return zipFileBytes;
   }
 
   private List<CqlLibrary> getCQLForLibraries(Bundle measureBundle) {
-    List<Library> libraries = getLibraryResources(measureBundle);
-    List<CqlLibrary> cqlLibries = new ArrayList<>();
-    for (Library library : libraries) {
+    List<CqlLibrary> cqlLibraries = new ArrayList<>();
+    for (Library library : getLibraryResources(measureBundle)) {
       Attachment attachment = getCqlAttachment(library);
       String cql = new String(attachment.getData());
-      cqlLibries.add(
+      cqlLibraries.add(
           CqlLibrary.builder()
               .cqlLibraryName(library.getName())
               .cql(cql)
               .version(Version.parse(library.getVersion()))
               .build());
     }
-    return cqlLibries;
+    return cqlLibraries;
   }
 
   private Attachment getCqlAttachment(Library library) {
