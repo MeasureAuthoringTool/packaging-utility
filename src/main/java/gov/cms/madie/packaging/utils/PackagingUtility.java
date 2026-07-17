@@ -11,7 +11,10 @@ public interface PackagingUtility {
   byte[] getZipBundle(Object export, String exportFileName) throws InternalServerException;
 
   byte[] buildCompositeExport(
-      String compositeBundle, List<Export> componentBundles, String exportFileName);
+      String compositeBundle,
+      List<Export> componentBundles,
+      List<Export.ComponentHumanReadable> componentHumanReadables,
+      String exportFileName);
 
   String buildCompositeMeasureBundle(String compositeBundle, List<Export> componentExports);
 
