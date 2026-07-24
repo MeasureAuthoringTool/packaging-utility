@@ -39,7 +39,8 @@ public class PackagingUtilityImpl implements PackagingUtility {
   public byte[] getZipBundle(Object o, String exportFileName) throws InternalServerException {
     if (o instanceof Export export) {
       Bundle bundle = parseBundle(export.getMeasureBundleJson());
-      return getZipBundle(bundle, exportFileName, export.getHumanReadable(), null);
+      return getZipBundle(
+          bundle, exportFileName, export.getHumanReadable(), export.getComponentHumanReadables());
     }
 
     if (o instanceof Bundle bundle) {
