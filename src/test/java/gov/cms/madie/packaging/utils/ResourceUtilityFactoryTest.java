@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import gov.cms.madie.models.common.ModelType;
 import java.lang.reflect.InvocationTargetException;
 
+import gov.cms.madie.packaging.utils.qicore411.PackagingUtilityImpl;
 import org.junit.jupiter.api.Test;
 
 class ResourceUtilityFactoryTest {
@@ -68,7 +69,7 @@ class ResourceUtilityFactoryTest {
 
       assertInstanceOf(
           gov.cms.madie.packaging.utils.usqualitycore.PackagingUtilityImpl.class, utility);
-      assertInstanceOf(gov.cms.madie.packaging.utils.qicore411.PackagingUtilityImpl.class, utility);
+      assertInstanceOf(PackagingUtilityImpl.class, utility);
     } catch (InstantiationException
         | IllegalAccessException
         | IllegalArgumentException
