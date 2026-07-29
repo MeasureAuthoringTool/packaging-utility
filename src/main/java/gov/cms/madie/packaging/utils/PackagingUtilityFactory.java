@@ -1,5 +1,7 @@
 package gov.cms.madie.packaging.utils;
 
+import gov.cms.madie.models.common.ModelType;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 import java.util.HashMap;
@@ -19,6 +21,7 @@ public class PackagingUtilityFactory {
           {
             put("QI-Core v4.1.1", "qicore411");
             put("QI-Core v6.0.0", "qicore6");
+            put(ModelType.US_QUALITY_CORE_0_5_0.getValue(), "usqualitycore");
           }
         };
 
