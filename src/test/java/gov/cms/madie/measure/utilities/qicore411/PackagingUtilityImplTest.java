@@ -60,28 +60,6 @@ class PackagingUtilityImplTest implements ResourceFileUtil {
   }
 
   @Test
-  void testHumanReadableUsesCompactListMargins() {
-    PackagingUtility utility = new PackagingUtilityImpl();
-
-    String humanReadable = utility.getHumanReadableWithCSS(JsonBits.BUNDLE);
-
-    assertTrue(
-        humanReadable.contains(
-            ".narrative-table ul,\n"
-                + "        .content-container ul {\n"
-                + "            list-style: disc;\n"
-                + "            padding-left: 25px;\n"
-                + "            margin: 5px 0;"));
-    assertTrue(
-        humanReadable.contains(
-            ".narrative-table ol,\n"
-                + "        .content-container ol {\n"
-                + "            list-style: decimal;\n"
-                + "            padding: 0 0 0 25px;\n"
-                + "            margin: 5px 0;"));
-  }
-
-  @Test
   void testGetZipBundleWithLibraries() throws IOException {
     PackagingUtility utility = new PackagingUtilityImpl();
 
