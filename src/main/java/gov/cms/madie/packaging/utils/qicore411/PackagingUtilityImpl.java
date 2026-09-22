@@ -2,8 +2,7 @@ package gov.cms.madie.packaging.utils.qicore411;
 
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
-import gov.cms.madie.models.common.Version;
-import gov.cms.madie.models.library.CqlLibrary;
+import gov.cms.madie.models.dto.CqlLibraryDto;
 import gov.cms.madie.models.measure.Export;
 import gov.cms.madie.packaging.exceptions.InternalServerException;
 import gov.cms.madie.packaging.utils.PackagingUtility;
@@ -255,7 +254,7 @@ public class PackagingUtilityImpl implements PackagingUtility {
   }
 
   private void addCqlEntries(Map<String, byte[]> entries, Bundle bundle) {
-    for (CqlLibrary library : getCQLForLibraries(bundle)) {
+    for (CqlLibraryDto library : getCQLForLibraries(bundle)) {
       String filePath =
           CQL_DIRECTORY + library.getCqlLibraryName() + "-" + library.getVersion() + ".cql";
       entries.put(filePath, library.getCql().getBytes());
@@ -307,16 +306,16 @@ public class PackagingUtilityImpl implements PackagingUtility {
     }
   }
 
-  private List<CqlLibrary> getCQLForLibraries(Bundle measureBundle) {
-    List<CqlLibrary> cqlLibraries = new ArrayList<>();
+  private List<CqlLibraryDto> getCQLForLibraries(Bundle measureBundle) {
+    List<CqlLibraryDto> cqlLibraries = new ArrayList<>();
     for (Library library : getLibraryResources(measureBundle)) {
       Attachment attachment = getCqlAttachment(library);
       String cql = new String(attachment.getData());
       cqlLibraries.add(
-          CqlLibrary.builder()
+          CqlLibraryDto.builder()
               .cqlLibraryName(library.getName())
               .cql(cql)
-              .version(Version.parse(library.getVersion()))
+              .version(library.getVersion())
               .build());
     }
     return cqlLibraries;
