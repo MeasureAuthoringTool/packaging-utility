@@ -65,18 +65,18 @@
 		</dependency>
 		<!-- Needed to fix class not found errors when using v2.15.4 - required in HAPI FHIR v7.4.3+ -->
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
+			<groupId>tools.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
 			<version>3.1.8</version>
 		</dependency>
 		<!-- override jackson-databind from 2.21.1 to 2.21.5 pulled in through hapi-fhir 8.10.0 due to critical vulns -->
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
+			<groupId>tools.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<version>3.1.8</version>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
+			<groupId>tools.jackson.core</groupId>
 			<artifactId>jackson-annotations</artifactId>
 			<version>3.1.8</version>
 		</dependency>
